@@ -16,7 +16,7 @@
 %{
 using TToken = test::parser::token_type;
 const char * token_type(TToken t);
-#define YY_USER_ACTION std::cout << "Token <- " << text() << " ->" << std::endl;
+#define YY_USER_ACTION  std::cout << "Token <- " << text() << " ->" << std::endl;
 %}
 /* Define names */
 /* * Define helpers * */
@@ -56,10 +56,16 @@ SINGLEQUOTESTRING                   \'(?:(?:[^'\\\n\r\u{2028}\u{2029}])|{ESCAPES
 %%
 {WHITESPACE}+                       /* skip Whitespaces */
 {SINGLELINECOMMENT}|{MULTILINECOMMENT} /* skip Comments */
-{LINETERMINATOR}                    { YY_USER_ACTION return TToken::LINETERMINATOR; }
+{LINETERMINATOR}                    /* { YY_USER_ACTION return TToken::LINETERMINATOR; }*/
 {LINETERMINATORSEQUENCE} 
+ /* Keywords */
+if                                  { YY_USER_ACTION return TToken::KW_IF; }
+else                                { YY_USER_ACTION return TToken::KW_ELSE; }
+dummyop                             { YY_USER_ACTION return TToken::KW_DUMMYOP; }
  /* Punctuators */
 ";"                                 { YY_USER_ACTION return TToken::P_SEMI; }
+"("                                 { YY_USER_ACTION return TToken::P_LBRACE; }
+")"                                 { YY_USER_ACTION return TToken::P_RBRACE; }
  /* Literals */
  /* * Constant-lexem literals * */
 null                                { YY_USER_ACTION return TToken::L_NULL; }
@@ -81,7 +87,12 @@ const char* token_type(TToken t)
     int offset = (int)TToken::LINETERMINATOR;
     static const char* tokens[] = {
         "LINETERMINATOR",
+        "KW_IF",
+        "KW_ELSE",
+        "KW_DUMMYOP",
         "P_SEMI",
+        "P_LBRACE",
+        "P_RBRACE",
         "L_NULL",
         "L_TRUE",
         "L_FALSE",

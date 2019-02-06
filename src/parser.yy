@@ -21,7 +21,12 @@
 /* Define Tokens */
 
 %token LINETERMINATOR
+%precedence KW_IF
+%precedence KW_ELSE
+%token KW_DUMMYOP
 %token P_SEMI
+%token P_LBRACE
+%token P_RBRACE
 %token L_NULL
 %token L_TRUE
 %token L_FALSE
@@ -38,22 +43,38 @@ root: batch T_END
  }
  ;
 
-batch: stmt stmt_terminator
- | batch stmt stmt_terminator
+batch: stmt P_SEMI
+ | batch stmt P_SEMI
  ;
 
-stmt: IDENTIFIER
+stmt: if_stmt
+ | dummy_stmt
+ ;
+
+if_stmt: KW_IF if_expr stmt KW_ELSE stmt
+ { std::cout<< "If-Then-Else" << std::endl; }
+ | KW_IF if_expr stmt
+ { std::cout << "If-Then" << std::endl; }
+ ;
+
+if_expr: P_LBRACE expr P_RBRACE
+ ;
+dummy_stmt: KW_DUMMYOP expr
+ ;
+
+expr: IDENTIFIER
  | literal
  ;
 
+ /*
 stmt_terminator: P_SEMI
- | line_ter
+ | line_ter P_SEMI
  ;
 
 line_ter: LINETERMINATOR
  | line_ter LINETERMINATOR
  ;
-
+ */
 literal: L_NULL
  | L_TRUE
  | L_FALSE
