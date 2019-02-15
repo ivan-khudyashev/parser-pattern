@@ -1,0 +1,8 @@
+/some_regex/
+/some_regex/g
+/w3schools/i
+/\w+/
+/ab+c/i
+/JAVA(SCRIPT)/i
+/-/
+/(Василий) (Пупкин)/

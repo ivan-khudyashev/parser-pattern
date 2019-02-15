@@ -19,10 +19,18 @@
     #define yylex reflex_lexer.yylex
 }
 /* Define Tokens */
+%right P_ASSIGN
+%left P_LAND
+%left P_EQ
+%left P_ADD P_SUB
+%left P_MUL P_DIV
+%left P_USUB
+%left P_INC P_DEC
 
-%token LINETERMINATOR
 %precedence KW_IF
 %precedence KW_ELSE
+
+%token LINETERMINATOR
 %token KW_DUMMYOP
 %token P_SEMI
 %token P_LBRACE
@@ -32,6 +40,7 @@
 %token L_FALSE
 %token L_NUMERIC
 %token L_STRING
+%token L_REGEX
 %token IDENTIFIER
 %token T_UNDEFINED
 %token T_END
@@ -40,6 +49,7 @@
 root: batch T_END
  {
     std::cout << "Successfully parsed!" << std::endl;
+    return 0;
  }
  ;
 
@@ -48,7 +58,7 @@ batch: stmt P_SEMI
  ;
 
 stmt: if_stmt
- | dummy_stmt
+ | expr
  ;
 
 if_stmt: KW_IF if_expr stmt KW_ELSE stmt
@@ -59,10 +69,32 @@ if_stmt: KW_IF if_expr stmt KW_ELSE stmt
 
 if_expr: P_LBRACE expr P_RBRACE
  ;
-dummy_stmt: KW_DUMMYOP expr
+
+expr: prim
+ { std:: cout << "expr: prim" << std::endl; }
+ | P_DEC prim
+ { std:: cout << "expr: --" << std::endl; }
+ | P_INC prim
+ { std:: cout << "expr: ++" << std::endl; }
+ | expr P_ADD expr
+ { std:: cout << "expr: +" << std::endl; }
+ | expr P_SUB expr
+ { std:: cout << "expr: -" << std::endl; }
+ | expr P_MUL expr
+ { std:: cout << "expr: *" << std::endl; }
+ | expr P_DIV expr
+ { std:: cout << "expr: /" << std::endl; }
+ | expr P_LAND expr
+ { std:: cout << "expr: &&" << std::endl; }
+ | expr P_EQ expr
+ { std:: cout << "expr: ==" << std::endl; }
+ | prim P_ASSIGN expr
+ { std:: cout << "expr: assign" << std::endl; }
+ | P_SUB expr %prec P_USUB
+ { std:: cout << "expr: unary minus" << std::endl; }
  ;
 
-expr: IDENTIFIER
+prim: IDENTIFIER
  | literal
  ;
 

@@ -1,1 +1,1 @@
-if (1) if(3) dummyop 4 else dummyop 5;
+if (false) if(true) a = 4 else a = 5;

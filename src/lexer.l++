@@ -53,6 +53,15 @@ ESCAPESEQUENCE                      \\(?:[^\n\r\u{2028}\u{2029}0-9xu]|(?:x[[:xdi
 NULLESCAPE                          \\0/[^0-9]
 DOUBLEQUOTESTRING                   \"(?:(?:[^"\\\n\r\u{2028}\u{2029}])|{ESCAPESEQUENCE}|{NULLESCAPE})*\"
 SINGLEQUOTESTRING                   \'(?:(?:[^'\\\n\r\u{2028}\u{2029}])|{ESCAPESEQUENCE}|{NULLESCAPE})*\'
+/* ** Regex literals ** */
+REGEXBACKSLASH                      \\[^\n\r\u{2028}\u{2029}]
+/* *** ] = \u{005D} *** */
+/* *** \ = \u{005C} *** */
+REGEXCLASS                          \[(?:{REGEXBACKSLASH}|[^\n\r\u{2028}\u{2029}\u{005D}\u{005C}])*\]
+/* *** [ = \u{005B} *** */
+/* *** / = \u{002F} *** */
+/* *** * = \u{002A} *** */
+REGEXPBODY                          (?:[^\n\r\u{2028}\u{2029}\u{002A}\u{005C}\u{002F}\u{005B}]|{REGEXBACKSLASH}|{REGEXCLASS})(?:[^\n\r\u{2028}\u{2029}\u{005C}\u{002F}\u{005B}]|{REGEXBACKSLASH}|{REGEXCLASS})*
 %%
 {WHITESPACE}+                       /* skip Whitespaces */
 {SINGLELINECOMMENT}|{MULTILINECOMMENT} /* skip Comments */
@@ -66,6 +75,15 @@ dummyop                             { YY_USER_ACTION return TToken::KW_DUMMYOP; 
 ";"                                 { YY_USER_ACTION return TToken::P_SEMI; }
 "("                                 { YY_USER_ACTION return TToken::P_LBRACE; }
 ")"                                 { YY_USER_ACTION return TToken::P_RBRACE; }
+"+"                                 { YY_USER_ACTION return TToken::P_ADD; }
+"-"                                 { YY_USER_ACTION return TToken::P_SUB; }
+"*"                                 { YY_USER_ACTION return TToken::P_MUL; }
+"/"                                 { YY_USER_ACTION return TToken::P_DIV; }
+"&&"                                { YY_USER_ACTION return TToken::P_LAND; }
+"="                                 { YY_USER_ACTION return TToken::P_ASSIGN; }
+"=="                                { YY_USER_ACTION return TToken::P_EQ; }
+"++"                                { YY_USER_ACTION return TToken::P_INC; }
+"--"                                { YY_USER_ACTION return TToken::P_DEC; }
  /* Literals */
  /* * Constant-lexem literals * */
 null                                { YY_USER_ACTION return TToken::L_NULL; }
@@ -76,6 +94,7 @@ false                               { YY_USER_ACTION return TToken::L_FALSE; }
  /* * String literals * */
 {DOUBLEQUOTESTRING}|{SINGLEQUOTESTRING} { YY_USER_ACTION return TToken::L_STRING; }
  /* * Regular expression literals * */
+\/{REGEXPBODY}\/{IDENTIFIERPART}*    { YY_USER_ACTION return TToken::L_REGEX; }
  /* Identifiers */
 {IDENTIFIERSTART}{IDENTIFIERPART}*  { YY_USER_ACTION return TToken::IDENTIFIER; }
  /* Final rules */
@@ -84,11 +103,21 @@ false                               { YY_USER_ACTION return TToken::L_FALSE; }
 %%
 const char* token_type(TToken t)
 {
-    int offset = (int)TToken::LINETERMINATOR;
+    int offset = (int)TToken::P_ASSIGN;
     static const char* tokens[] = {
-        "LINETERMINATOR",
+        "P_ASSIGN",
+        "P_LAND",
+        "P_EQ",
+        "P_ADD",
+        "P_SUB",
+        "P_MUL",
+        "P_DIV",
+        "P_USUB",
+        "P_INC",
+        "P_DEC",
         "KW_IF",
         "KW_ELSE",
+        "LINETERMINATOR",
         "KW_DUMMYOP",
         "P_SEMI",
         "P_LBRACE",
@@ -98,8 +127,10 @@ const char* token_type(TToken t)
         "L_FALSE",
         "L_NUMERIC",
         "L_STRING",
+        "L_REGEX",
         "IDENTIFIER",
-        "T_UNDEFINED"
+        "T_UNDEFINED",
+        "T_END"
     };
     static const char error_token[] = "Wrong Token's type";
     int tokens_count = sizeof tokens / sizeof(const char*);
